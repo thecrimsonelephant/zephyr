@@ -1,0 +1,14 @@
+# Ignore raw data files
+data/*.json
+data/*.csv
+testing/
+.venv
+.env
+postgresload.py
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.env
+venv/
+.DS_Store
