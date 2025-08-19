@@ -1,9 +1,13 @@
 # Zephyr
 zeph·yr (noun)
+
 /ˈzefər/
+
 Definition: a soft gentle breeze ([Webster](https://www.merriam-webster.com/dictionary/zephyr))
 
-Zephyr is an end-to-end data pipeline and dashboard that blends air quality and weather data into executive-ready insights.  
+---
+
+This project, Zephyr, strives to be an end-to-end data pipeline and dashboard that blends air quality and weather data into executive-ready insights.  
 Built with Python and free public APIs, it demonstrates the full ETL journey: ingestion → transformation → storage → visualization.
 
 [![Python](https://img.shields.io/badge/Python-3.10+-blue)](https://www.python.org/) 
