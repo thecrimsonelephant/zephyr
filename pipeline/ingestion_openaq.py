@@ -100,7 +100,7 @@ def getDailyAQData(sensorList):
         page = 1 # defaulting and resetting to 1 once while-break is reached 
         while True:
             params['page'] = page
-            url = f'{BASE}/sensors/{id}/measurements/daily'
+            url = f'{BASE}/sensors/{id}/hours'
             print(url) # sanity check
             try:
                 response = requests.get(url, headers=headers, params=params)
