@@ -1,1 +1,1 @@
-from .ingestion_openaq import getAQData
+from .ingestion_openaq import getOpenAQSensors, getDailyAQData
