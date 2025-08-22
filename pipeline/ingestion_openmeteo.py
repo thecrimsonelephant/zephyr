@@ -3,6 +3,7 @@ import pandas as pd
 import requests_cache
 from retry_requests import retry
 
+# API setup from https://open-meteo.com/en/docs selection
 def getOpenMeteoData():
     # Setup the Open-Meteo API client with cache and retry on error
     cache_session = requests_cache.CachedSession('.cache', expire_after = 3600)
@@ -93,5 +94,21 @@ def getOpenMeteoData():
     daily_data["weather_code"] = daily_weather_code
 
     daily_dataframe = pd.DataFrame(data = daily_data)
-    # print("\nDaily data\n", daily_dataframe)
     return daily_dataframe, hourly_dataframe
+
+def mergeDataframes(daily, hourly):
+    hourly['hourly_datetime'] = pd.to_datetime(hourly['date']) # preserving hourly datetime data for matching against openaq
+    hourly['date'] = pd.to_datetime(hourly['date']).dt.date
+    daily['date'] = pd.to_datetime(daily['date']).dt.date  # only keep date part
+
+    # merge on dates
+    df = pd.merge(
+        hourly,
+        daily,
+        on='date',
+        how='left'  # keep all hourly rows even if daily info missing
+    )
+
+    df.drop(columns=['date'], inplace=True) # dropping plain date col but might add it back jic, we'll see
+    df = df[sorted(df.columns)] # sorting because my brain breaks if not
+    return df

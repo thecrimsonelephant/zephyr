@@ -57,7 +57,7 @@ zephyr/
 
 ## ⚡ Completions (Current and Planned)
 - [X] OpenAQ API
-- [ ] Open-Meteo API
+- [X] Open-Meteo API
 - [ ] Postgres local
 - [ ] Streamlit Cloud
 - [ ] Automation

@@ -1,1 +1,1 @@
-from pipeline import ingestion_openaq
+from pipeline import ingestion_openaq, ingestion_openmeteo
