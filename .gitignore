@@ -1,6 +1,6 @@
 # Ignore raw data files
 data/*.json
-data/*.csv
+# data/*.csv
 testing/
 .venv
 .env
