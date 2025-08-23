@@ -19,7 +19,7 @@ def getOpenMeteoData():
         "daily": ["temperature_2m_mean", "apparent_temperature_mean", "sunset", "sunrise", "weather_code"],
         "hourly": ["temperature_2m", "apparent_temperature", "dew_point_2m", "relative_humidity_2m", "precipitation", "wind_speed_10m", "wind_direction_10m", "wind_gusts_10m", "cloud_cover", "shortwave_radiation", "snow_depth", "surface_pressure", "pressure_msl", "uv_index"],
         "timezone": "America/Los_Angeles",
-        "past_days": 7,
+        "past_days": 2,
         "forecast_days": 1,
     }
     responses = openmeteo.weather_api(url, params=params)
@@ -97,7 +97,7 @@ def getOpenMeteoData():
     return daily_dataframe, hourly_dataframe
 
 def mergeDataframes(daily, hourly):
-    hourly['hourly_datetime'] = pd.to_datetime(hourly['date']) # preserving hourly datetime data for matching against openaq
+    hourly['hourly_datetime'] = pd.to_datetime(hourly['date']) # preserving hourly UTC datetime data for matching against openaq
     hourly['date'] = pd.to_datetime(hourly['date']).dt.date
     daily['date'] = pd.to_datetime(daily['date']).dt.date  # only keep date part
 
@@ -108,6 +108,13 @@ def mergeDataframes(daily, hourly):
         on='date',
         how='left'  # keep all hourly rows even if daily info missing
     )
+
+    # converting sunrise and sunset from unix → UTC → PDT
+    df['sunrise (PDT)'] = pd.to_datetime(df['sunrise'], unit='s', utc=True).dt.tz_convert("America/Los_Angeles")
+    df['sunset (PDT)']  = pd.to_datetime(df['sunset'],  unit='s', utc=True).dt.tz_convert("America/Los_Angeles")
+
+    df.drop(columns=['date', 'sunrise', 'sunset'], inplace=True) # dropping plain date col but might add it back jic, we'll see
+    df = df[sorted(df.columns)] # sorting because my brain breaks if not
 
     df.drop(columns=['date'], inplace=True) # dropping plain date col but might add it back jic, we'll see
     df = df[sorted(df.columns)] # sorting because my brain breaks if not

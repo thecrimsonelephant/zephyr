@@ -82,7 +82,7 @@ def getOpenAQSensors():
     # print("x-ratelimit-remaining:", response.headers.get("x-ratelimit-remaining"))
     return df1
 
-def getDailyAQData(sensorList):
+def getHourlyAQData(sensorList):
     ids = sensorList['Sensor ID'].reset_index(drop=True).tolist()
     tfrom, tto = timestamps(1)
     headers = {
