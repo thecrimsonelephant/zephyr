@@ -82,11 +82,6 @@ def getOpenAQSensors():
         print(f'Request error occurred: {keyErr}')
     except Exception as e:
         print(f'Request error occurred: {e}')
-
-    # print("x-ratelimit-used:", response.headers.get("x-ratelimit-used"))
-    # print("x-ratelimit-reset:", response.headers.get("x-ratelimit-reset"))
-    # print("x-ratelimit-limit:", response.headers.get("x-ratelimit-limit"))
-    # print("x-ratelimit-remaining:", response.headers.get("x-ratelimit-remaining"))
     return df1
 
 def getHourlyAQData(sensorList):
@@ -130,8 +125,8 @@ def getHourlyAQData(sensorList):
                 print("x-ratelimit-limit:", response.headers.get("x-ratelimit-limit"))
                 print("x-ratelimit-remaining:", response.headers.get("x-ratelimit-remaining"))
                 if len(results) == 0:
-                    print(f"-------------------------------------SLEEPING 10s-------------------------------------")
-                    time.sleep(10)  
+                    print(f"-------------------------------------SLEEPING 5s-------------------------------------")
+                    time.sleep(5)  
                     break
 
                 used = int(response.headers.get("x-ratelimit-used", 50))
