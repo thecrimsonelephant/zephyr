@@ -11,7 +11,7 @@ BASE = 'https://api.openaq.org/v3'
 
 from dotenv import load_dotenv # loading api key from .env file
 load_dotenv()
-xapikey = os.getenv("APIKEY") # storing apikey
+XAPIKEY = os.getenv("APIKEY") # storing apikey
 
 def timestamps(d):
     now = dt.now()
@@ -26,10 +26,12 @@ def getOpenAQSensors():
     latitude = []
     longitude = []
     name = [] # name of sensor
+    city = [] # city name list
+    timezone = [] # timezone of sensor
 
     url = f'{BASE}/locations'  
     headers = {
-        "X-API-Key": xapikey,
+        "X-API-Key": XAPIKEY,
         'Content-Type': 'application/json'
     }
     params = {
@@ -42,6 +44,7 @@ def getOpenAQSensors():
     try: 
         response = requests.get(url, headers=headers, params=params) # get request to OpenAQ
         r = response.json() # returning as parseable json
+        # pp.pprint(r)
 
         for results in r['results']:
             sensors = results['sensors']
@@ -52,15 +55,19 @@ def getOpenAQSensors():
                 first.append((results.get('datetimeFirst') or {}).get('utc', ''))
                 last.append((results.get('datetimeLast') or {}).get('utc', ''))
                 name.append(results.get('name', ''))
+                timezone.append(results.get('timezone', ''))
+                city.append('Los Angeles') # adding city name for clarification
 
         # appending to dataframe
         df = pd.DataFrame({
             'Sensor ID': id,
             'Latitude': latitude,
             'Longitude': longitude,
+            'City': city,
             'Station Name': name,
             'First Seen (UTC)': first,
             'Last Seen (UTC)': last,
+            'Timezone': timezone,
         })
         today_utc = pd.Timestamp(dt.now(tz.utc))
         oneday_utc = today_utc - pd.Timedelta(days=1)
@@ -84,9 +91,9 @@ def getOpenAQSensors():
 
 def getHourlyAQData(sensorList):
     ids = sensorList['Sensor ID'].reset_index(drop=True).tolist()
-    tfrom, tto = timestamps(1)
+    tfrom, tto = timestamps(2)
     headers = {
-        "X-API-Key": xapikey,
+        "X-API-Key": XAPIKEY,
         'Content-Type': 'application/json'
     }
     params = {
@@ -96,38 +103,46 @@ def getHourlyAQData(sensorList):
     }
 
     allRows = []
-    for id in ids: 
-        page = 1 # defaulting and resetting to 1 once while-break is reached 
+    for idx, sensor_id in enumerate(ids): 
+        # grab metadata for this sensor row
+        sensorMetadata = sensorList.iloc[idx].to_dict()
+
+        page = 1 
         while True:
             params['page'] = page
-            url = f'{BASE}/sensors/{id}/hours'
+            url = f'{BASE}/sensors/{sensor_id}/hours'
             print(url) # sanity check
             try:
                 response = requests.get(url, headers=headers, params=params)
                 data = response.json()
-                # print(data['meta']['found'])
                 results = data.get("results", [])
-                allRows.extend(results) # extending all found results to list to avoid list of lists 
-                page += 1 # increasing page if exists
 
-                # verifying rate limits for sanity
+                # attach metadata to each hourly record
+                for r in results:
+                    row = {**r, **sensorMetadata}  # merge hourly data + sensor metadata, with r winning out if found
+                    allRows.append(row)
+
+                page += 1 
+
+                # verify rate limits for sanity
                 print("x-ratelimit-used:", response.headers.get("x-ratelimit-used"))
                 print("x-ratelimit-reset:", response.headers.get("x-ratelimit-reset"))
                 print("x-ratelimit-limit:", response.headers.get("x-ratelimit-limit"))
                 print("x-ratelimit-remaining:", response.headers.get("x-ratelimit-remaining"))
                 if len(results) == 0:
-                    time.sleep(10)  # safe pause
                     print(f"-------------------------------------SLEEPING 10s-------------------------------------")
+                    time.sleep(10)  
                     break
-                used = int(response.headers.get("x-ratelimit-used", 50)) # defaulting to 50 if it skips
-                remaining = int(response.headers.get("x-ratelimit-remaining", 1)) # defaulting to minimum (1) if it skips
-                reset = int(response.headers.get("x-ratelimit-reset", 60)) # defaulting to maximum (60) if it skips
-                if remaining <= 10 or used >= 50: # creating buffer around ratelimits used and remaining so as to not get banned 🥲 
-                    print(f"Rate limit reached, sleeping for {reset} seconds")
+
+                used = int(response.headers.get("x-ratelimit-used", 50))
+                remaining = int(response.headers.get("x-ratelimit-remaining", 1))
+                reset = int(response.headers.get("x-ratelimit-reset", 60))
+                if remaining <= 10 or used >= 50:
                     print(f"-------------------------------------SLEEPING {reset}s-------------------------------------")
-                    time.sleep(reset) # defaults to 60s
+                    print(f"Rate limit reached, sleeping for {reset} seconds")
+                    time.sleep(reset)
                 else:
-                    time.sleep(10)  # safety pause
+                    time.sleep(10)  
                     print(f"-------------------------------------SLEEPING 10s-------------------------------------")
             except requests.exceptions.RequestException as reqErr:
                 print(f'Request error occurred: {reqErr}')
@@ -138,5 +153,6 @@ def getHourlyAQData(sensorList):
             except Exception as e:
                 print(f'Request error occurred: {e}')
 
-    df = pd.json_normalize(allRows) # normalizing extended list to dataframe 
+    # normalize to dataframe (now includes Sensor ID + metadata!)
+    df = pd.json_normalize(allRows)
     return df
