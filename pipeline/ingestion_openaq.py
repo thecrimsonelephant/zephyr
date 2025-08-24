@@ -133,12 +133,12 @@ def getHourlyAQData(sensorList):
                 remaining = int(response.headers.get("x-ratelimit-remaining", 1))
                 reset = int(response.headers.get("x-ratelimit-reset", 60))
                 if remaining <= 10 or used >= 50:
-                    print(f"-------------------------------------SLEEPING {reset}s-------------------------------------")
                     print(f"Rate limit reached, sleeping for {reset} seconds")
+                    print(f"-------------------------------------SLEEPING {reset}s-------------------------------------")
                     time.sleep(reset)
                 else:
-                    time.sleep(10)  
                     print(f"-------------------------------------SLEEPING 10s-------------------------------------")
+                    time.sleep(10)  
             except requests.exceptions.RequestException as reqErr:
                 print(f'Request error occurred: {reqErr}')
             except ValueError as jsonErr:
