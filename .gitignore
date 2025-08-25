@@ -1,6 +1,7 @@
 # Ignore raw data files
 data/*.json
 # data/*.csv
+*.ipynb
 testing/
 .venv
 .env
