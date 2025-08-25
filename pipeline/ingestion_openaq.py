@@ -19,6 +19,13 @@ def timestamps(d):
     return delta, now
 
 def getOpenAQSensors():
+    # getting multiple cities (similar in meteo) for 4 cities: LA, NY, CHI, HTX
+    cities = [
+        {"City": "Los Angeles", "Latitude": 34.0522, "Longitude": -118.2437, "Timezone": "America/Los_Angeles"},
+        {"City": "New York", "Latitude": 40.7128, "Longitude": -74.0060, "Timezone": "America/New_York"},
+        {"City": "Chicago", "Latitude": 41.8781, "Longitude": -87.6298, "Timezone": "America/Chicago"},
+        {"City": "Houston", "Latitude": 29.7604, "Longitude": -95.3698, "Timezone": "America/Chicago"},
+    ]
     # lists for appending data 
     id = [] # sensor IDs
     first = [] # first seen
@@ -34,59 +41,67 @@ def getOpenAQSensors():
         "X-API-Key": XAPIKEY,
         'Content-Type': 'application/json'
     }
-    params = {
-        "coordinates": '34.0522,-118.2437', # LA
-        "radius": 5000,  # in meters (5km search radius)
-        "limit": 100, # page size
-        "countries_id":155, # USA
-        "sort": "desc" # ordering by ID desc
-    }
-    try: 
-        response = requests.get(url, headers=headers, params=params) # get request to OpenAQ
-        r = response.json() # returning as parseable json
-        # pp.pprint(r)
+    # looping through cities dict 
+    for info in cities:
+        c = info['City']
+        lat = info['Latitude']
+        long = info['Longitude']
+        tzone = info['Timezone']
+        coordinates = str(lat) + ","+ str(long)
+        print(c, " ", coordinates)
+        params = {
+            "coordinates": coordinates, # LA
+            "radius": 5000,  # in meters (5km search radius)
+            "limit": 100, # page size
+            "countries_id":155, # USA
+            "sort": "desc" # ordering by ID desc
+        }
+        try: 
+            response = requests.get(url, headers=headers, params=params) # get request to OpenAQ
+            r = response.json() # returning as parseable json
+            # pp.pprint(r)
 
-        for results in r['results']:
-            sensors = results['sensors']
-            for sensor in sensors:
-                id.append(sensor.get('id', ''))
-                latitude.append((results.get('coordinates') or {}).get('latitude', ''))
-                longitude.append((results.get('coordinates') or {}).get('longitude', ''))
-                first.append((results.get('datetimeFirst') or {}).get('utc', ''))
-                last.append((results.get('datetimeLast') or {}).get('utc', ''))
-                name.append(results.get('name', ''))
-                timezone.append(results.get('timezone', ''))
-                city.append('Los Angeles') # adding city name for clarification
+            for results in r['results']:
+                sensors = results['sensors']
+                for sensor in sensors:
+                    id.append(sensor.get('id', ''))
+                    latitude.append((results.get('coordinates') or {}).get('latitude', ''))
+                    longitude.append((results.get('coordinates') or {}).get('longitude', ''))
+                    first.append((results.get('datetimeFirst') or {}).get('utc', ''))
+                    last.append((results.get('datetimeLast') or {}).get('utc', ''))
+                    name.append(results.get('name', ''))
+                    timezone.append(results.get('timezone', ''))
+                    city.append(c) # adding city name for clarification
 
-        # appending to dataframe
-        df = pd.DataFrame({
-            'Sensor ID': id,
-            'Latitude': latitude,
-            'Longitude': longitude,
-            'City': city,
-            'Station Name': name,
-            'First Seen (UTC)': first,
-            'Last Seen (UTC)': last,
-            'Timezone': timezone,
-        })
-        today_utc = pd.Timestamp(dt.now(tz.utc))
-        oneday_utc = today_utc - pd.Timedelta(days=1)
-        df['Last Seen (UTC)'] = pd.to_datetime(df['Last Seen (UTC)'], utc=True, errors='coerce')
+            # appending to dataframe
+            df = pd.DataFrame({
+                'Sensor ID': id,
+                'Latitude': latitude,
+                'Longitude': longitude,
+                'City': city,
+                'Station Name': name,
+                'First Seen (UTC)': first,
+                'Last Seen (UTC)': last,
+                'Timezone': timezone,
+            })
+            today_utc = pd.Timestamp(dt.now(tz.utc))
+            oneday_utc = today_utc - pd.Timedelta(days=1)
+            df['Last Seen (UTC)'] = pd.to_datetime(df['Last Seen (UTC)'], utc=True, errors='coerce')
 
-        df1 = df[(df['Last Seen (UTC)'] >= oneday_utc) & (df['Last Seen (UTC)'] <= today_utc)] # getting specifically sensors only found in the past day
-    except requests.exceptions.RequestException as reqErr:
-        print(f'Request error occurred: {reqErr}')
-    except ValueError as jsonErr:
-        print(f'Request error occurred: {jsonErr}')
-    except KeyError as keyErr:
-        print(f'Request error occurred: {keyErr}')
-    except Exception as e:
-        print(f'Request error occurred: {e}')
+            df1 = df[(df['Last Seen (UTC)'] >= oneday_utc) & (df['Last Seen (UTC)'] <= today_utc)] # getting specifically sensors only found in the past day
+        except requests.exceptions.RequestException as reqErr:
+            print(f'Request error occurred: {reqErr}')
+        except ValueError as jsonErr:
+            print(f'Request error occurred: {jsonErr}')
+        except KeyError as keyErr:
+            print(f'Request error occurred: {keyErr}')
+        except Exception as e:
+            print(f'Request error occurred: {e}')
     return df1
 
 def getHourlyAQData(sensorList):
     ids = sensorList['Sensor ID'].reset_index(drop=True).tolist()
-    tfrom, tto = timestamps(2)
+    tfrom, tto = timestamps(2) # getting two days of data (delta = today-2)
     headers = {
         "X-API-Key": XAPIKEY,
         'Content-Type': 'application/json'
@@ -96,7 +111,7 @@ def getHourlyAQData(sensorList):
         "datetime_to": tto,
         "limit": 100 # max number of results per page
     }
-
+    counter = 0 # counter for total number of requests made
     allRows = []
     for idx, sensor_id in enumerate(ids): 
         # grab metadata for this sensor row
@@ -104,9 +119,10 @@ def getHourlyAQData(sensorList):
 
         page = 1 
         while True:
+            counter += 1
             params['page'] = page
             url = f'{BASE}/sensors/{sensor_id}/hours'
-            print(url) # sanity check
+            print("CALL #", counter, "URL", url) # sanity check
             try:
                 response = requests.get(url, headers=headers, params=params)
                 data = response.json()
@@ -116,17 +132,16 @@ def getHourlyAQData(sensorList):
                 for r in results:
                     row = {**r, **sensorMetadata}  # merge hourly data + sensor metadata, with r winning out if found
                     allRows.append(row)
-
                 page += 1 
-
                 # verify rate limits for sanity
                 print("x-ratelimit-used:", response.headers.get("x-ratelimit-used"))
                 print("x-ratelimit-reset:", response.headers.get("x-ratelimit-reset"))
                 print("x-ratelimit-limit:", response.headers.get("x-ratelimit-limit"))
                 print("x-ratelimit-remaining:", response.headers.get("x-ratelimit-remaining"))
                 if len(results) == 0:
-                    print(f"-------------------------------------SLEEPING 5s-------------------------------------")
-                    time.sleep(5)  
+                    print(f"No more calls for {sensor_id}, so breaking out of loop")
+                    print("-------------------------------------")
+                    time.sleep(5)
                     break
 
                 used = int(response.headers.get("x-ratelimit-used", 50))
@@ -137,16 +152,20 @@ def getHourlyAQData(sensorList):
                     print(f"-------------------------------------SLEEPING {reset}s-------------------------------------")
                     time.sleep(reset)
                 else:
-                    print(f"-------------------------------------SLEEPING 10s-------------------------------------")
+                    print("-------------Sleeping 10s before next request-------------")
                     time.sleep(10)  
             except requests.exceptions.RequestException as reqErr:
                 print(f'Request error occurred: {reqErr}')
+                break
             except ValueError as jsonErr:
                 print(f'Request error occurred: {jsonErr}')
+                break
             except KeyError as keyErr:
                 print(f'Request error occurred: {keyErr}')
+                break
             except Exception as e:
                 print(f'Request error occurred: {e}')
+                break
 
     # normalize to dataframe (now includes Sensor ID + metadata!)
     df = pd.json_normalize(allRows)

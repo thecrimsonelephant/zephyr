@@ -4,8 +4,8 @@ def main():
     # it's later now. Callinga ll of those imported functions
     sensorList = getOpenAQSensors()
     openAQ = getHourlyAQData(sensorList)
-    daily, hourly = getOpenMeteoData()
-    meteo = mergeDataframes(daily, hourly)
+    daily, hourly, cities = getOpenMeteoData()
+    meteo = mergeDataframes(daily, hourly, cities)
     dailyWeather = cleaned_data(openAQ, meteo)
     return dailyWeather
 
