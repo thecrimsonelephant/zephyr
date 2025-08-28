@@ -128,7 +128,8 @@ if sidebar == "High Level":
     city_cols = right_col.columns(len(dailyAvg))
     for col, (_, row) in zip(city_cols, dailyAvg.iterrows()):
         value = round(row['metric_value'], 2)
-        col.metric(label=f"{row['city']}", value=value, delta=round(15-value,2))
+        col.metric(label=f"{row['city']}", value=value#, delta=round(value-15,2)
+                   )
 
     # --- KPI 2: Δ PM2.5 ---
     left_col, right_col = st.columns([1, len(dailyDelta)])
@@ -146,7 +147,7 @@ if sidebar == "High Level":
         col.metric(
             label=f"{row['city']}",
             value=f"{-de:.2f}",
-            delta=delta
+            #delta=delta
         )
         
     # --- KPI 3: Temperature-PM2.5 correlation ---
