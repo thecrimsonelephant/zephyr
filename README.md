@@ -24,13 +24,17 @@ Built with Python and free public APIs, it demonstrates the full ETL journey: in
 ---
 
 ## 🔧 Tech Stack
-- Ingestion: Python (`requests`, `pandas`)  
 - Data Sources:  
   - [OpenAQ API](https://docs.openaq.org/) → air quality  
-  - [Open-Meteo API](https://open-meteo.com/) → weather  
-- Storage: PostgreSQL
+  - [Open-Meteo API](https://open-meteo.com/) → weather 
+- Ingestion: Python (`requests`, `pandas`)   
+- Storage:
+  - PostgreSQL → local storage 
+  - Supabase → online public storage & visualization ease
 - Visualization: Streamlit Cloud
-- Automation: GitHub Actions (daily pipeline runs)  
+- Automation: 
+  - GitHub Actions (daily pipeline runs)  
+  - Apache Airflow
 
 ---
 
@@ -41,6 +45,7 @@ zephyr/
 ├── data/ # sample data extracts (CSV)
 ├── dashboard/ # Streamlit dashboard app
 ├── .github/workflows # GitHub Actions workflows
+├── ingestion.py # ingesting data into Postgres local
 └── README.md # project documentation
 ```
 
@@ -58,16 +63,14 @@ zephyr/
 ## ⚡ Completions (Current and Planned)
 - [X] OpenAQ API
 - [X] Open-Meteo API
-- [X] Postgres local
+- [X] Postgres local & Supabase Data Storage
 - [X] Streamlit Cloud
-- [ ] Supbase Data Storage
 - [ ] Automation
 ---
 
 ## 📈 Example Dashboard
 *TBD :)*
 
-- KPI cards (days exceeding WHO thresholds)  
-- Line charts of AQI over time  
-- Scatterplots (AQI vs temperature/wind)  
-- Map visualization of AQI across cities  
+- [ ] KPI cards (daily AQI, delta, difference)
+- [ ] Scatter or line plots (PM<sub>2.5</sub> vs temperature/wind)  
+- [ ] Map visualization of AQI across cities  
