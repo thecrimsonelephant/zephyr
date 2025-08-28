@@ -166,8 +166,8 @@ if sidebar == "High Level":
 
     if "zoom_factor" not in st.session_state:
         st.session_state.zoom_factor = 20
-    # if "autoscale_toggle" not in st.session_state:
-    #     st.session_state.autoscale_toggle = True
+    if "autoscale_toggle" not in st.session_state:
+        st.session_state.autoscale_toggle = True
     if "start_date" not in st.session_state:
         st.session_state.start_date = min_date
     if "end_date" not in st.session_state:
@@ -205,7 +205,7 @@ if sidebar == "High Level":
             st.session_state.start_date = min_date
             st.session_state.end_date = max_date
             st.session_state.zoom_factor = 20
-            st.session_state.autoscale_toggle = True
+            # st.session_state.autoscale_toggle = True
 
     # Apply filtering
     filtered_tempPm25 = tempPm25[
