@@ -14,6 +14,8 @@ import os
 load_dotenv()
 SUPABASE_URL = os.getenv("SUPABASE_URL")
 SUPABASE_API_KEY = os.getenv("SUPABASE_API_KEY")
+print(SUPABASE_URL)
+print(SUPABASE_API_KEY)
 
 st.title("Weather Dashboard")
 
