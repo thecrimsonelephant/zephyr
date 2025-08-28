@@ -58,8 +58,9 @@ zephyr/
 ## ⚡ Completions (Current and Planned)
 - [X] OpenAQ API
 - [X] Open-Meteo API
-- [ ] Postgres local
-- [ ] Streamlit Cloud
+- [X] Postgres local
+- [X] Streamlit Cloud
+- [ ] Supbase Data Storage
 - [ ] Automation
 ---
 
