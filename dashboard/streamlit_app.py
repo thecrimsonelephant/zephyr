@@ -118,37 +118,138 @@ if sidebar == "High Level":
             """,
         unsafe_allow_html=True
         )
+
     # --- KPI 1: Daily PM2.5 ---
-    left_col, right_col = st.columns([1, len(dailyAvg)])
-    left_col.markdown(
-        "<div style='display: flex; justify-content: left; align-items: center; height: 100%;'>"
-        "<h3>Daily PM<sub>2.5</sub></h3></div>", unsafe_allow_html=True
-    )
-
-    city_cols = right_col.columns(len(dailyAvg))
-    for col, (_, row) in zip(city_cols, dailyAvg.iterrows()):
-        value = round(row['metric_value'], 2)
-        col.metric(label=f"{row['city']}", value=value#, delta=round(value-15,2)
-                   )
-
-    # --- KPI 2: Δ PM2.5 ---
+    # today = 21
+    # yesterday = 23
     left_col, right_col = st.columns([1, len(dailyDelta)])
     left_col.markdown(
         "<div style='display: flex; justify-content: left; align-items: center; height: 100%;'>"
-        "<h3> Δ PM<sub>2.5</sub> </h3></div>", unsafe_allow_html=True
+        "<h3> Today's PM<sub>2.5</sub> </h3></div>", unsafe_allow_html=True
     )
 
     city_cols = right_col.columns(len(dailyDelta))
     for col, (_, row) in zip(city_cols, dailyDelta.iterrows()):
         today = round(row['today'], 2)  # yesterday’s PM2.5
         yesterday = round(row['yesterday'], 2)         # today - yesterday
-        de = today-yesterday
-        delta = yesterday if yesterday >= today else -yesterday
+
+        val = round(today - yesterday, 2)
+        # Determine arrow and color (emoji workaround)
+        if today > yesterday:
+            # Red for increase
+            color = "inverse"
+            delta_display = f"{val}"
+            st.write(
+                """
+                <style>
+                [data-testid="stMetricDelta"] svg {
+                }
+                </style>
+                """,
+                unsafe_allow_html=True,
+            )
+        elif today < yesterday:
+            color = "inverse"
+            # Green for decrease
+            delta_display = f"{val}"
+            st.write(
+                """
+                <style>
+                [data-testid="stMetricDelta"] svg {
+                }
+                </style>
+                """,
+                unsafe_allow_html=True,
+            )
+        else:
+            color = "off"
+            delta_display = "→ 0"  # no change
+            st.write(
+                """
+                <style>
+                [data-testid="stMetricDelta"] svg {
+                    display: none;
+                }
+                </style>
+                """,
+                unsafe_allow_html=True,
+            )
+
         col.metric(
             label=f"{row['city']}",
-            value=f"{-de:.2f}",
-            #delta=delta
+            value=today,
+            delta=delta_display,
+            delta_color=color
         )
+
+
+    # ---------------------------------
+
+    left_col, right_col = st.columns([1, len(dailyDelta)])
+    left_col.markdown(
+        "<div style='display: flex; justify-content: left; align-items: center; height: 100%;'>"
+        "<h3> Dist. from WHO PM<sub>2.5</sub> </h3></div>", unsafe_allow_html=True
+    )
+
+    city_cols = right_col.columns(len(dailyDelta))
+    for col, (_, row) in zip(city_cols, dailyDelta.iterrows()):
+        today = round(row['today'], 2)  # yesterday’s PM2.5
+        yesterday = round(row['yesterday'], 2)         # today - yesterday
+        val = round(today - yesterday, 2)
+        if True:
+            d = st.write(
+                """
+                <style>
+                [data-testid="stMetricDelta"] svg {
+                }
+                </style>
+                """,
+                unsafe_allow_html=True,
+            )
+        col.metric(
+            label=f"{row['city']}",
+            value=round(15-today, 2),
+            delta=d
+        )
+
+    # ---------------------------------
+
+    left_col, right_col = st.columns([1, len(dailyDelta)])
+    left_col.markdown(
+        "<div style='display: flex; justify-content: left; align-items: center; height: 100%;'>"
+        "<h3> Yesterday's PM<sub>2.5</sub> </h3></div>", unsafe_allow_html=True
+    )
+
+    city_cols = right_col.columns(len(dailyDelta))
+    for col, (_, row) in zip(city_cols, dailyDelta.iterrows()):
+        today = round(row['today'], 2)  # yesterday’s PM2.5
+        yesterday = round(row['yesterday'], 2)         # today - yesterday
+        val = round(today - yesterday, 2)
+        col.metric(
+            label=f"{row['city']}",
+            value=yesterday
+        )
+
+    # --- KPI 2: Δ PM2.5 ---
+    # -----------------------------
+    # left_col, right_col = st.columns([1, len(dailyDelta)])
+    # left_col.markdown(
+    #     "<div style='display: flex; justify-content: left; align-items: center; height: 100%;'>"
+    #     "<h3> Δ PM<sub>2.5</sub> </h3></div>", unsafe_allow_html=True
+    # )
+
+    # city_cols = right_col.columns(len(dailyDelta))
+    # for col, (_, row) in zip(city_cols, dailyDelta.iterrows()):
+    #     today = round(row['today'], 2)  # yesterday’s PM2.5
+    #     yesterday = round(row['yesterday'], 2)         # today - yesterday
+    #     de = today-yesterday
+    #     delta = yesterday if yesterday >= today else -yesterday
+    #     col.metric(
+    #         label=f"{row['city']}",
+    #         value=f"{-de:.2f}",
+    #         delta=delta
+    #     )
+    # -------------------------------
         
     # --- KPI 3: Temperature-PM2.5 correlation ---
     # Define PM2.5 colors per city
