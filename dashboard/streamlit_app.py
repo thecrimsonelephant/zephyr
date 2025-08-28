@@ -22,6 +22,6 @@ st.title("Weather Dashboard")
 supabase = create_client(supabase_url=SUPABASE_URL, supabase_key=SUPABASE_API_KEY)
 
 # Example: fetch data
-data = supabase.table("daily_weather").select("*").execute()
+data = supabase.table("pm25_daily_city_avg").select("*").execute()
 df = pd.DataFrame(data.data)
 st.dataframe(df)
