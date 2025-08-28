@@ -17,8 +17,6 @@ SUPABASE_API_KEY = os.getenv("SUPABASE_API_KEY")
 print(SUPABASE_URL)
 print(SUPABASE_API_KEY)
 
-st.title("Weather Dashboard")
-
 supabase = create_client(supabase_url=SUPABASE_URL, supabase_key=SUPABASE_API_KEY)
 
 # ''' QUERIES: 
@@ -168,8 +166,8 @@ if sidebar == "High Level":
 
     if "zoom_factor" not in st.session_state:
         st.session_state.zoom_factor = 20
-    if "autoscale_toggle" not in st.session_state:
-        st.session_state.autoscale_toggle = True
+    # if "autoscale_toggle" not in st.session_state:
+    #     st.session_state.autoscale_toggle = True
     if "start_date" not in st.session_state:
         st.session_state.start_date = min_date
     if "end_date" not in st.session_state:
