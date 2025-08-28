@@ -87,8 +87,8 @@ tempPm25 = pd.DataFrame(tempcorr.data)
 # tempPm25 = pd.read_sql(temp_corr, engine)  # Correlation KPI
 
 # st.write(dailyAvg)
-# st.write(dailyDelta)
-# st.write(tempPm25)
+st.write(dailyDelta)
+st.write(tempPm25)
 
 
 st.set_page_config(
