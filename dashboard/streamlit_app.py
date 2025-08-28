@@ -82,7 +82,7 @@ dailyAvg = pd.DataFrame(pm25_daily_city_avg.data)
 pm25_daily_city_delta = supabase.table("pm25_daily_city_delta").select("*").execute()
 dailyDelta = pd.DataFrame(pm25_daily_city_delta.data)
 
-tempcorr = supabase.table("tempcorr").select("*").execute()
+tempcorr = supabase.table("temp_corr").select("*").execute()
 tempPm25 = pd.DataFrame(tempcorr.data)
 # tempPm25 = pd.read_sql(temp_corr, engine)  # Correlation KPI
 
