@@ -38,8 +38,8 @@ def getOpenMeteoData():
             "daily": ["temperature_2m_mean", "apparent_temperature_mean", "sunset", "sunrise", "weather_code"],
             "hourly": ["temperature_2m", "apparent_temperature", "dew_point_2m", "relative_humidity_2m", "precipitation", "wind_speed_10m", "wind_direction_10m", "wind_gusts_10m", "cloud_cover", "shortwave_radiation", "snow_depth", "surface_pressure", "pressure_msl", "uv_index"],
             "timezone": tzone,
-            "past_days": 2,
-            "forecast_days": 1,
+            "past_days": 8,
+            "forecast_days": 0,
         }
         responses = openmeteo.weather_api(url, params=params)
         # Process first location. FOR-loop added for parsing multiple locations
@@ -160,5 +160,3 @@ def mergeDataframes(daily, hourly, cities):
     df.drop(columns=['date', 'sunrise', 'sunset', 'timezone'], inplace=True)
     df = df[sorted(df.columns)]
     return df
-daily, hourly, cities = getOpenMeteoData()
-print(mergeDataframes(daily, hourly, cities))

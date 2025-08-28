@@ -4,7 +4,6 @@
 import pandas as pd
 import requests
 from datetime import datetime as dt, timedelta as td, timezone as tz
-# import pprint as pp
 import time
 import os 
 BASE = 'https://api.openaq.org/v3'
@@ -14,12 +13,13 @@ load_dotenv()
 XAPIKEY = os.getenv("APIKEY") # storing apikey
 
 def timestamps(d):
-    now = dt.now()
-    delta = now - td(days=d)
-    return delta, now
+    today = dt.now().replace(hour=0, minute=0, second=0, microsecond=0)
+    yesterday = today - td(days=1)
+    delta = yesterday - td(days=d)
+    # print(delta, yesterday)
+    return delta, yesterday
 
 def getOpenAQSensors():
-    # getting multiple cities (similar in meteo) for 4 cities: LA, NY, CHI, HTX
     cities = [
         {"City": "Los Angeles", "Latitude": 34.0522, "Longitude": -118.2437, "Timezone": "America/Los_Angeles"},
         {"City": "New York", "Latitude": 40.7128, "Longitude": -74.0060, "Timezone": "America/New_York"},
@@ -41,7 +41,6 @@ def getOpenAQSensors():
         "X-API-Key": XAPIKEY,
         'Content-Type': 'application/json'
     }
-    # looping through cities dict 
     for info in cities:
         c = info['City']
         lat = info['Latitude']
@@ -85,10 +84,13 @@ def getOpenAQSensors():
                 'Timezone': timezone,
             })
             today_utc = pd.Timestamp(dt.now(tz.utc))
-            oneday_utc = today_utc - pd.Timedelta(days=1)
+            yesterday = today_utc - pd.Timedelta(days=1)
+            week_ago = yesterday - pd.Timedelta(days=7) # getting time delta as of yesterday - 7d ago
+            # sanity check
+            print(yesterday)
+            print(week_ago)
             df['Last Seen (UTC)'] = pd.to_datetime(df['Last Seen (UTC)'], utc=True, errors='coerce')
-
-            df1 = df[(df['Last Seen (UTC)'] >= oneday_utc) & (df['Last Seen (UTC)'] <= today_utc)] # getting specifically sensors only found in the past day
+            df1 = df[(df['Last Seen (UTC)'] >= yesterday) & (df['Last Seen (UTC)'] <= today_utc)] # getting specifically sensors only found in the past day
         except requests.exceptions.RequestException as reqErr:
             print(f'Request error occurred: {reqErr}')
         except ValueError as jsonErr:
@@ -101,7 +103,7 @@ def getOpenAQSensors():
 
 def getHourlyAQData(sensorList):
     ids = sensorList['Sensor ID'].reset_index(drop=True).tolist()
-    tfrom, tto = timestamps(2) # getting two days of data (delta = today-2)
+    tfrom, tto = timestamps(7) # getting 7 days of data (delta = yesterday-7)
     headers = {
         "X-API-Key": XAPIKEY,
         'Content-Type': 'application/json'
@@ -122,7 +124,7 @@ def getHourlyAQData(sensorList):
             counter += 1
             params['page'] = page
             url = f'{BASE}/sensors/{sensor_id}/hours'
-            print("CALL #", counter, "URL", url) # sanity check
+            print(f"CALL # {counter} ----- ID {sensor_id} ----- URL {url}") # sanity check... also keeping track of how many calls in the run so that I don't overrun!
             try:
                 response = requests.get(url, headers=headers, params=params)
                 data = response.json()
@@ -130,7 +132,7 @@ def getHourlyAQData(sensorList):
 
                 # attach metadata to each hourly record
                 for r in results:
-                    row = {**r, **sensorMetadata}  # merge hourly data + sensor metadata, with r winning out if found
+                    row = {**r, **sensorMetadata}  # merge hourly data + sensor metadata, with r winning out if found. Really trying not to get banned.
                     allRows.append(row)
                 page += 1 
                 # verify rate limits for sanity
@@ -152,8 +154,8 @@ def getHourlyAQData(sensorList):
                     print(f"-------------------------------------SLEEPING {reset}s-------------------------------------")
                     time.sleep(reset)
                 else:
-                    print("-------------Sleeping 10s before next request-------------")
-                    time.sleep(10)  
+                    print("-------------Sleeping 5s before next request-------------")
+                    time.sleep(5)  
             except requests.exceptions.RequestException as reqErr:
                 print(f'Request error occurred: {reqErr}')
                 break
@@ -170,3 +172,5 @@ def getHourlyAQData(sensorList):
     # normalize to dataframe (now includes Sensor ID + metadata!)
     df = pd.json_normalize(allRows)
     return df
+# aqSensors = getOpenAQSensors()
+# display(getHourlyAQData(aqSensors))
