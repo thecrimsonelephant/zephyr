@@ -21,59 +21,59 @@ st.title("Weather Dashboard")
 
 supabase = create_client(supabase_url=SUPABASE_URL, supabase_key=SUPABASE_API_KEY)
 
-''' QUERIES: 
-pm25_daily_city_avg = CREATE VIEW pm25_daily_city_avg AS
-SELECT 
-    DATE("datetimeFrom_utc") as date,
-    sensor_city as city,
-    AVG(CASE WHEN parameter_name = 'temperature' THEN value END) as avg_temp,
-    AVG(CASE WHEN parameter_name = 'pm25' THEN value END) as avg_pm25
-FROM daily_weather
-WHERE parameter_name IN ('temperature', 'pm25')
-GROUP BY DATE("datetimeFrom_utc"), sensor_city
-ORDER BY date, city;
---------------------------
+# ''' QUERIES: 
+# pm25_daily_city_avg = CREATE VIEW pm25_daily_city_avg AS
+# SELECT 
+#     DATE("datetimeFrom_utc") as date,
+#     sensor_city as city,
+#     AVG(CASE WHEN parameter_name = 'temperature' THEN value END) as avg_temp,
+#     AVG(CASE WHEN parameter_name = 'pm25' THEN value END) as avg_pm25
+# FROM daily_weather
+# WHERE parameter_name IN ('temperature', 'pm25')
+# GROUP BY DATE("datetimeFrom_utc"), sensor_city
+# ORDER BY date, city;
+# --------------------------
 
-pm25_daily_city_delta = CREATE VIEW pm25_daily_city_delta AS
-WITH daily_avg AS (
-    SELECT
-        sensor_city AS city,
-        DATE("datetimeFrom_utc") AS day,
-        AVG(value) AS avg_pm25
-    FROM daily_weather
-    WHERE parameter_name = 'pm25'
-    GROUP BY sensor_city, DATE("datetimeFrom_utc")
-),
-ranked AS (
-    SELECT
-        city,
-        day,
-        avg_pm25,
-        ROW_NUMBER() OVER (PARTITION BY city ORDER BY day DESC) AS rn
-    FROM daily_avg
-)
-SELECT
-    t.city,
-    t.avg_pm25      AS today,
-    y.avg_pm25      AS yesterday
-FROM ranked t
-LEFT JOIN ranked y
-    ON t.city = y.city
-   AND y.rn = 2
-WHERE t.rn = 1
-ORDER BY t.city;
+# pm25_daily_city_delta = CREATE VIEW pm25_daily_city_delta AS
+# WITH daily_avg AS (
+#     SELECT
+#         sensor_city AS city,
+#         DATE("datetimeFrom_utc") AS day,
+#         AVG(value) AS avg_pm25
+#     FROM daily_weather
+#     WHERE parameter_name = 'pm25'
+#     GROUP BY sensor_city, DATE("datetimeFrom_utc")
+# ),
+# ranked AS (
+#     SELECT
+#         city,
+#         day,
+#         avg_pm25,
+#         ROW_NUMBER() OVER (PARTITION BY city ORDER BY day DESC) AS rn
+#     FROM daily_avg
+# )
+# SELECT
+#     t.city,
+#     t.avg_pm25      AS today,
+#     y.avg_pm25      AS yesterday
+# FROM ranked t
+# LEFT JOIN ranked y
+#     ON t.city = y.city
+#    AND y.rn = 2
+# WHERE t.rn = 1
+# ORDER BY t.city;
 
-temp_corr = CREATE VIEW temp_corr AS 
-SELECT 
-    DATE("datetimeFrom_utc") as date,
-    sensor_city as city,
-    AVG(CASE WHEN parameter_name = 'temperature' THEN value END) as avg_temp,
-    AVG(CASE WHEN parameter_name = 'pm25' THEN value END) as avg_pm25
-FROM daily_weather
-WHERE parameter_name IN ('temperature', 'pm25')
-GROUP BY DATE("datetimeFrom_utc"), sensor_city
-ORDER BY date, city;
-'''
+# temp_corr = CREATE VIEW temp_corr AS 
+# SELECT 
+#     DATE("datetimeFrom_utc") as date,
+#     sensor_city as city,
+#     AVG(CASE WHEN parameter_name = 'temperature' THEN value END) as avg_temp,
+#     AVG(CASE WHEN parameter_name = 'pm25' THEN value END) as avg_pm25
+# FROM daily_weather
+# WHERE parameter_name IN ('temperature', 'pm25')
+# GROUP BY DATE("datetimeFrom_utc"), sensor_city
+# ORDER BY date, city;
+# '''
 
 # Example: fetch data
 pm25_daily_city_avg = supabase.table("pm25_daily_city_avg").select("*").execute()
