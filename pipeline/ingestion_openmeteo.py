@@ -130,12 +130,6 @@ def getOpenMeteoData():
 # getOpenMeteoData()
 
 def mergeDataframes(daily, hourly, cities):
-    cities = [
-        {"City": "Los Angeles", "Latitude": 34.0522, "Longitude": -118.2437, "Timezone": "America/Los_Angeles"},
-        {"City": "New York", "Latitude": 40.7128, "Longitude": -74.0060, "Timezone": "America/New_York"},
-        {"City": "Chicago", "Latitude": 41.8781, "Longitude": -87.6298, "Timezone": "America/Chicago"},
-        {"City": "Houston", "Latitude": 29.7604, "Longitude": -95.3698, "Timezone": "America/Chicago"},
-    ]
     hourly['hourly_datetime (UTC)'] = pd.to_datetime(hourly['date']) # preserving hourly UTC datetime data for matching against openaq
     hourly['date'] = pd.to_datetime(hourly['date']).dt.date
     daily['date'] = pd.to_datetime(daily['date']).dt.date  # only keep date part
