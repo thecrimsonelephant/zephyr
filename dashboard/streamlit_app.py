@@ -82,6 +82,7 @@ dailyDelta = pd.DataFrame(pm25_daily_city_delta.data)
 
 tempcorr = supabase.table("temp_corr").select("*").execute()
 tempPm25 = pd.DataFrame(tempcorr.data)
+st.write(tempPm25)
 
 st.set_page_config(
     page_title="Air Quality Dashboard",
