@@ -1,5 +1,5 @@
 # About code: Getting the first 100 results of the latest Air Quality results for LA
-# Author: Winnie Mutunga
+# Author: james Mutunga
 
 import pandas as pd
 import requests
